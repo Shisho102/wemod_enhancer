@@ -34,6 +34,8 @@ One command patches the WeMod client: Pro subscription active, auto-updates disa
 
 ## GUI (optional)
 
+![Screenshot presenting GUI](docs/Screenshot_20260930_224227.png)
+
 One self-contained folder, no terminal. Grab the artifact for your OS from the [latest release](https://github.com/e-gleba/wemod_enhancer/releases/latest), unpack, run:
 
 | OS | Artifact | Inside |
