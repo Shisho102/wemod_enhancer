@@ -21,17 +21,8 @@ constexpr std::int32_t window_min_height{600};
 constexpr std::int32_t window_max_width{1680};
 constexpr std::int32_t window_max_height{1050};
 
-struct sdl_string final
-{
-    char* value{nullptr};
-
-    explicit sdl_string(char* owned) noexcept : value{owned} {}
-    sdl_string(const sdl_string&) = delete;
-    sdl_string& operator=(const sdl_string&) = delete;
-    sdl_string(sdl_string&&) = delete;
-    sdl_string& operator=(sdl_string&&) = delete;
-    ~sdl_string() noexcept { SDL_free(value); }
-};
+// SDL-owned C string: unique_ptr with SDL_free as deleter.
+using sdl_text = std::unique_ptr<char, decltype(&SDL_free)>;
 
 void log_message(const std::string_view message) noexcept
 {
@@ -42,6 +33,9 @@ void log_message(const std::string_view message) noexcept
                    text.c_str());
 }
 
+// noexcept firewall by design: allocation failure
+// terminates here instead of escaping into SDL.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void message_box(SDL_Window* window, const SDL_MessageBoxFlags flags,
                  const std::string_view title,
                  const std::string_view message) noexcept
@@ -63,7 +57,7 @@ void SDLCALL on_folder(void* userdata, const char* const* file_list,
     if (result == nullptr) {
         return;
     }
-    const std::lock_guard lock{result->mutex};
+    const std::scoped_lock lock{result->mutex};
     if (file_list != nullptr && file_list[0] != nullptr) {
         result->folder = file_list[0];
     }
@@ -72,13 +66,17 @@ void SDLCALL on_folder(void* userdata, const char* const* file_list,
 
 [[nodiscard]] std::string preference_file(const std::string_view name)
 {
-    sdl_string preference{SDL_GetPrefPath("wemod", "enhancer")};
-    if (preference.value == nullptr) {
+    const sdl_text preference{SDL_GetPrefPath("wemod", "enhancer"),
+                                  &SDL_free};
+    if (preference.get() == nullptr) {
         return {};
     }
-    return (fs::path{preference.value} / name).string();
+    return (fs::path{preference.get()} / name).string();
 }
 
+// noexcept firewall by design: allocation failure
+// terminates here instead of escaping into SDL.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void log_error(const std::string_view operation) noexcept
 {
     log_message(std::format("{}: {}", operation, SDL_GetError()));
@@ -87,10 +85,13 @@ void log_error(const std::string_view operation) noexcept
 
 native_context native(const context& ctx) noexcept
 {
-    return {static_cast<SDL_Window*>(ctx.window),
-            static_cast<SDL_Renderer*>(ctx.renderer)};
+    return {.window = static_cast<SDL_Window*>(ctx.window),
+            .renderer = static_cast<SDL_Renderer*>(ctx.renderer)};
 }
 
+// noexcept firewall by design: allocation failure
+// terminates here instead of escaping into SDL.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 std::pair<std::int32_t, std::int32_t> preferred_size() noexcept
 {
     SDL_Rect usable{};
@@ -177,6 +178,9 @@ try {
     return false;
 }
 
+// noexcept firewall by design: allocation failure
+// terminates here instead of escaping into SDL.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void drain_outbox(context& ctx, app_state& state,
                   const float delta_seconds) noexcept
 try {
@@ -188,7 +192,7 @@ try {
     state.copied_flash =
         std::max(0.0F, state.copied_flash - delta_seconds);
     {
-        const std::lock_guard lock{ctx.dialog->mutex};
+        const std::scoped_lock lock{ctx.dialog->mutex};
         if (auto folder{std::exchange(ctx.dialog->folder, std::nullopt)}) {
             state.install_dir = std::move(folder).value();
         }
@@ -197,7 +201,7 @@ try {
     if (std::exchange(state.want_browse, false)) {
         bool open{false};
         {
-            const std::lock_guard lock{ctx.dialog->mutex};
+            const std::scoped_lock lock{ctx.dialog->mutex};
             if (!ctx.dialog->pending) {
                 ctx.dialog->pending = true;
                 open = true;
@@ -241,11 +245,12 @@ void begin_frame(context& ctx, const float scale_x, const float scale_y,
 {
     const native_context handles{native(ctx)};
     Expects(handles.renderer != nullptr);
+    const auto& [red, green, blue, alpha]{clear};
     if (!SDL_SetRenderScale(handles.renderer, scale_x, scale_y)) {
         log_error("SDL_SetRenderScale");
     }
-    if (!SDL_SetRenderDrawColorFloat(handles.renderer, clear[0], clear[1],
-                                     clear[2], clear[3])) {
+    if (!SDL_SetRenderDrawColorFloat(handles.renderer, red, green, blue,
+                                     alpha)) {
         log_error("SDL_SetRenderDrawColorFloat");
     }
     if (!SDL_RenderClear(handles.renderer)) {
@@ -276,6 +281,9 @@ void shutdown(context& ctx) noexcept
     SDL_Quit();
 }
 
+// noexcept firewall by design: allocation failure
+// terminates here instead of escaping into SDL.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void fatal(const std::string_view title,
            const std::string_view message) noexcept
 {

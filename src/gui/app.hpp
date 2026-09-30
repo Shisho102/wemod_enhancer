@@ -97,7 +97,7 @@ struct app_state final
     fs::path resolved_install_dir;
     bool script_present{false};
     bool dll_present{false};
-    std::chrono::steady_clock::time_point last_probe{};
+    std::chrono::steady_clock::time_point last_probe;
     probe_state python_ok{probe_state::unknown};
     std::string python_version;
     std::string platform_detail;
@@ -173,6 +173,8 @@ class background_runner final
     background_runner() = default;
     background_runner(const background_runner&) = delete;
     background_runner& operator=(const background_runner&) = delete;
+    background_runner(background_runner&&) = delete;
+    background_runner& operator=(background_runner&&) = delete;
     ~background_runner() noexcept;
 
     [[nodiscard]] bool busy() const noexcept;

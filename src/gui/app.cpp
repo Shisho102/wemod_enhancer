@@ -18,8 +18,7 @@ std::string url_encode(const std::string_view text)
     std::string result;
     result.reserve(text.size());
     for (const unsigned char value : text) {
-        if (unreserved.find(static_cast<char>(value)) !=
-            std::string_view::npos) {
+        if (!unreserved.contains(static_cast<char>(value))) {
             result += static_cast<char>(value);
         } else {
             result += std::format("%{:02X}", value);
@@ -77,8 +76,14 @@ fs::path newest_app_dir(const fs::path& root)
     for (fs::directory_iterator it{root, error}, end; it != end && !error;
          it.increment(error)) {
         std::error_code type_error;
-        if (it->is_directory(type_error) && !type_error &&
-            it->path().filename().string().starts_with("app-")) {
+        if (!it->is_directory(type_error) || type_error ||
+            !it->path().filename().string().starts_with("app-")) {
+            continue;
+        }
+        // Only real installs: the asar must exist, not just the name.
+        std::error_code asar_error;
+        if (fs::is_regular_file(it->path() / "resources" / "app.asar",
+                                asar_error)) {
             candidates.push_back(it->path());
         }
     }
@@ -98,14 +103,23 @@ fs::path resolve_wemod_dir(const std::string_view dir)
 
     std::error_code error;
     fs::path picked{dir};
+    // Direct hit: an app-x.y.z folder or a (custom) wemod_bin.
     if (fs::is_regular_file(picked / "resources" / "app.asar", error)) {
         return picked;
     }
+    // One level up from wemod_bin (the wemod_data folder itself).
+    error.clear();
+    fs::path nested{picked / "wemod_bin"};
+    if (fs::is_regular_file(nested / "resources" / "app.asar", error)) {
+        return nested;
+    }
+    // WeMod root: newest version that actually contains the asar.
     if (const fs::path app{newest_app_dir(picked)}; !app.empty()) {
         return app;
     }
-    const fs::path launcher{picked / "wemod_data" / "wemod_bin"};
+    // Launcher checkout root.
     error.clear();
+    const fs::path launcher{picked / "wemod_data" / "wemod_bin"};
     return fs::is_regular_file(launcher / "resources" / "app.asar", error)
         ? launcher
         : fs::path{};
@@ -192,7 +206,7 @@ background_runner::~background_runner() noexcept
 
 bool background_runner::busy() const noexcept
 {
-    const std::lock_guard lock{mutex_};
+    const std::scoped_lock lock{mutex_};
     return busy_;
 }
 
@@ -200,7 +214,7 @@ bool background_runner::launch(const run_kind kind, std::string command)
 {
     Expects(!command.empty());
     {
-        const std::lock_guard lock{mutex_};
+        const std::scoped_lock lock{mutex_};
         if (busy_) {
             return false;
         }
@@ -214,19 +228,19 @@ bool background_runner::launch(const run_kind kind, std::string command)
         [this, kind, command = std::move(command)](
             const std::stop_token& token) {
             run_result result{run_capture(command, token)};
-            const std::lock_guard lock{mutex_};
+            const std::scoped_lock lock{mutex_};
             if (token.stop_requested()) {
                 busy_ = false;
                 return;
             }
-            finished_.push(finished_job{kind, std::move(result)});
+            finished_.push(finished_job{.kind = kind, .result = std::move(result)});
         }};
     return true;
 }
 
 std::optional<background_runner::finished_job> background_runner::poll()
 {
-    const std::lock_guard lock{mutex_};
+    const std::scoped_lock lock{mutex_};
     if (finished_.empty()) {
         return std::nullopt;
     }
@@ -244,7 +258,7 @@ void background_runner::request_stop() noexcept
         worker_.request_stop();
         worker_.join();
     }
-    const std::lock_guard lock{mutex_};
+    const std::scoped_lock lock{mutex_};
     busy_ = false;
 }
 }

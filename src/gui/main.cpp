@@ -11,6 +11,7 @@
 #include <gsl/assert>
 #include <gsl/narrow>
 #include <gsl/pointers>
+#include <gsl/util>
 
 #include <algorithm>
 #include <array>
@@ -86,7 +87,7 @@ void start_wemod_download(app& value)
         const char* downloads{SDL_GetUserFolder(SDL_FOLDER_DOWNLOADS)};
         if (downloads == nullptr) {
             value.state.want_alert =
-                alert_request{"Cannot download", SDL_GetError()};
+                alert_request{.title = "Cannot download", .message = SDL_GetError()};
             return;
         }
         const fs::path installer{fs::path{downloads} / "wemod_setup.exe"};
@@ -101,7 +102,7 @@ void start_wemod_download(app& value)
             SDL_GetEnvironmentVariable(SDL_GetEnvironment(), "HOME")};
         if (home == nullptr) {
             value.state.want_alert =
-                alert_request{"Cannot download", "HOME is not set."};
+                alert_request{.title = "Cannot download", .message = "HOME is not set."};
             return;
         }
         const fs::path directory{fs::path{home} / "wemod-launcher"};
@@ -194,12 +195,52 @@ void execute(app& value, const frame_requests& requests)
 void configure_imgui()
 {
     ImGuiStyle& style{ImGui::GetStyle()};
-    style.WindowPadding = ImVec2{16.0F, 14.0F};
-    style.FramePadding = ImVec2{14.0F, 8.0F};
-    style.ItemSpacing = ImVec2{10.0F, 8.0F};
+    style.WindowPadding = ImVec2{18.0F, 14.0F};
+    style.FramePadding = ImVec2{12.0F, 8.0F};
+    style.ItemSpacing = ImVec2{10.0F, 10.0F};
     style.ItemInnerSpacing = ImVec2{8.0F, 6.0F};
-    style.ScrollbarSize = 16.0F;
+    style.ChildRounding = 8.0F;
+    style.FrameRounding = 6.0F;
+    style.GrabRounding = 6.0F;
+    style.PopupRounding = 6.0F;
+    style.ScrollbarRounding = 9.0F;
+    style.TabRounding = 6.0F;
+    style.WindowBorderSize = 0.0F;
+    style.ChildBorderSize = 1.0F;
+    style.FrameBorderSize = 1.0F;
+    style.ScrollbarSize = 14.0F;
     style.GrabMinSize = 14.0F;
+
+    // Phosphor green on black: wake up, Neo.
+    auto& colors{style.Colors};
+    colors[ImGuiCol_Text]                 = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_TextDisabled]         = ImVec4{0.00F, 0.45F, 0.20F, 1.00F};
+    colors[ImGuiCol_WindowBg]             = ImVec4{0.01F, 0.03F, 0.01F, 1.00F};
+    colors[ImGuiCol_ChildBg]              = ImVec4{0.02F, 0.05F, 0.02F, 1.00F};
+    colors[ImGuiCol_PopupBg]              = ImVec4{0.02F, 0.05F, 0.02F, 0.98F};
+    colors[ImGuiCol_Border]               = ImVec4{0.00F, 0.60F, 0.25F, 0.60F};
+    colors[ImGuiCol_FrameBg]              = ImVec4{0.00F, 0.06F, 0.02F, 1.00F};
+    colors[ImGuiCol_FrameBgHovered]       = ImVec4{0.00F, 0.12F, 0.05F, 1.00F};
+    colors[ImGuiCol_FrameBgActive]        = ImVec4{0.00F, 0.20F, 0.08F, 1.00F};
+    colors[ImGuiCol_TitleBg]              = ImVec4{0.01F, 0.03F, 0.01F, 1.00F};
+    colors[ImGuiCol_TitleBgActive]        = ImVec4{0.01F, 0.03F, 0.01F, 1.00F};
+    colors[ImGuiCol_ScrollbarGrab]        = ImVec4{0.00F, 0.35F, 0.15F, 1.00F};
+    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4{0.00F, 0.55F, 0.25F, 1.00F};
+    colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_CheckMark]            = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_SliderGrab]           = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_SliderGrabActive]     = ImVec4{0.00F, 0.80F, 0.35F, 1.00F};
+    colors[ImGuiCol_Button]               = ImVec4{0.00F, 0.12F, 0.05F, 1.00F};
+    colors[ImGuiCol_ButtonHovered]        = ImVec4{0.00F, 0.25F, 0.10F, 1.00F};
+    colors[ImGuiCol_ButtonActive]         = ImVec4{0.00F, 0.18F, 0.07F, 1.00F};
+    colors[ImGuiCol_Header]               = ImVec4{0.00F, 0.12F, 0.05F, 1.00F};
+    colors[ImGuiCol_HeaderHovered]        = ImVec4{0.00F, 0.25F, 0.10F, 1.00F};
+    colors[ImGuiCol_HeaderActive]         = ImVec4{0.00F, 0.18F, 0.07F, 1.00F};
+    colors[ImGuiCol_Separator]            = ImVec4{0.00F, 0.50F, 0.20F, 0.60F};
+    colors[ImGuiCol_SeparatorHovered]     = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_SeparatorActive]      = ImVec4{0.00F, 1.00F, 0.45F, 1.00F};
+    colors[ImGuiCol_TabHovered]           = ImVec4{0.00F, 0.25F, 0.10F, 1.00F};
+    colors[ImGuiCol_TabActive]            = ImVec4{0.00F, 0.12F, 0.05F, 1.00F};
 }
 
 [[nodiscard]] bool init_imgui(const platform::context& context) noexcept
@@ -367,13 +408,13 @@ run_result run_capture(const std::string_view command,
     CloseHandle(read_handle);
 #else
     std::array<int, 2> output{-1, -1};
-    if (::pipe(output.data()) != 0 || !configure_pipe(output[0]) ||
-        !configure_pipe(output[1])) { // NOLINT(cppcoreguidelines-pro-type-vararg)
-        if (output[0] != -1) {
-            ::close(output[0]);
+    if (::pipe(output.data()) != 0 || !configure_pipe(gsl::at(output, 0)) ||
+        !configure_pipe(gsl::at(output, 1))) { // NOLINT(cppcoreguidelines-pro-type-vararg)
+        if (gsl::at(output, 0) != -1) {
+            ::close(gsl::at(output, 0));
         }
-        if (output[1] != -1) {
-            ::close(output[1]);
+        if (gsl::at(output, 1) != -1) {
+            ::close(gsl::at(output, 1));
         }
         result.output = std::format("error: pipe setup failed ({})", errno);
         return result;
@@ -381,27 +422,27 @@ run_result run_capture(const std::string_view command,
     const std::string command_text{command};
     const pid_t pid{::fork()};
     if (pid < 0) {
-        ::close(output[0]);
-        ::close(output[1]);
+        ::close(gsl::at(output, 0));
+        ::close(gsl::at(output, 1));
         result.output = std::format("error: fork failed ({})", errno);
         return result;
     }
     if (pid == 0) {
         ::setpgid(0, 0);
-        ::dup2(output[1], STDOUT_FILENO);
-        ::dup2(output[1], STDERR_FILENO);
-        ::close(output[0]);
-        ::close(output[1]);
+        ::dup2(gsl::at(output, 1), STDOUT_FILENO);
+        ::dup2(gsl::at(output, 1), STDERR_FILENO);
+        ::close(gsl::at(output, 0));
+        ::close(gsl::at(output, 1));
         ::execl("/bin/sh", "sh", "-c", command_text.c_str(), nullptr); // NOLINT(cppcoreguidelines-pro-type-vararg)
         ::_exit(127);
     }
 
     ::setpgid(pid, pid);
-    ::close(output[1]);
+    ::close(gsl::at(output, 1));
     std::array<char, 4096> buffer{};
     int status{0};
     while (true) {
-        const ssize_t count{::read(output[0], buffer.data(), buffer.size())};
+        const ssize_t count{::read(gsl::at(output, 0), buffer.data(), buffer.size())};
         if (count > 0) {
             result.output.append(buffer.data(), gsl::narrow<std::size_t>(count));
         }
@@ -421,13 +462,13 @@ run_result run_capture(const std::string_view command,
         std::this_thread::sleep_for(process_poll_interval);
     }
     while (true) {
-        const ssize_t count{::read(output[0], buffer.data(), buffer.size())};
+        const ssize_t count{::read(gsl::at(output, 0), buffer.data(), buffer.size())};
         if (count <= 0) {
             break;
         }
         result.output.append(buffer.data(), gsl::narrow<std::size_t>(count));
     }
-    ::close(output[0]);
+    ::close(gsl::at(output, 0));
     result.exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 #endif
     return result;
