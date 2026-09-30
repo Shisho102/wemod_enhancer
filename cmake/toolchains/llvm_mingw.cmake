@@ -22,7 +22,7 @@ endif()
 
 # --- tunables ----------------------------------------------------------------
 set(LLVM_MINGW_VERSION
-    "20260908"
+    "20260922"
     CACHE STRING "llvm-mingw release tag")
 set(LLVM_MINGW_HOST_OS
     "ubuntu-22.04"
