@@ -1,0 +1,93 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "openTelemetry": false,
+    "formatter": true,
+    // MCPs catalog: https://mcpservers.org/
+    // For skills see: https://www.skills.sh/
+    "mcp": {
+        "github": {
+            "type": "remote",
+            "url": "https://api.githubcopilot.com/mcp/",
+            // As github is piece of shit disable it
+            // Done everything as they say: https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-opencode.md
+            "enabled": false,
+            "oauth": false,
+            "headers": {
+                "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+            }
+        },
+        "xdocs": {
+            "type": "remote",
+            "url": "https://xdocs.dev/mcp",
+            "enabled": true
+        },
+        "qt-docs": {
+            "type": "remote",
+            "url": "https://qt-docs-mcp.qt.io/mcp",
+            "enabled": true
+        },
+        "ms-learn": {
+            "type": "remote",
+            "url": "https://learn.microsoft.com/api/mcp",
+            "enabled": true
+        },
+        "godbolt": {
+            "type": "remote",
+            "url": "https://godbolt.org/mcp",
+            "enabled": true
+        },
+        "google-dev": {
+            "type": "remote",
+            "url": "https://developerknowledge.googleapis.com/mcp",
+            "enabled": true
+        }
+    },
+    "references": {
+        "boost": {
+            "repository": "boostorg/boost",
+            "branch": "master",
+            "description": "Use for Boost C++ Libraries API, headers in libs/, and CMake usage patterns"
+        },
+        "tdesktop": {
+            "repository": "telegramdesktop/tdesktop",
+            "branch": "dev",
+            "description": "Use for Telegram Desktop source, build instructions, Qt/C++ patterns, and patch structure"
+        },
+        "cmake": {
+            "repository": "Kitware/CMake",
+            "description": "Use for official CMake implementation, Help/ documentation, modules, and command behavior"
+        },
+        "modern-cmake": {
+            "repository": "https://gitlab.com/CLIUtils/modern-cmake.git",
+            "branch": "master",
+            "description": "Use for free Modern CMake book patterns: target-based design, presets, dependencies, and install rules"
+        },
+        "cppreference": {
+            "repository": "PeterFeicht/cppreference-doc",
+            "description": "Use for C++ standard library reference source used to build the cppreference offline archive"
+        },
+        "sdl3": {
+            "repository": "libsdl-org/SDL",
+            "branch": "main",
+            "description": "Use for SDL3 windowing, rendering, audio, input, main-loop, and platform behavior"
+        },
+        "proton": {
+            "repository": "ValveSoftware/Proton",
+            "description": "Use for Proton/Steam Play compatibility, Wine integration, build scripts, and game-specific fixes"
+        },
+        "taskflow": {
+            "repository": "taskflow/taskflow",
+            "description": "Use for C++ task graphs, parallel algorithms, executors, scheduling, and C++20 task-parallel patterns"
+        },
+        "llvm": {
+            "repository": "llvm/llvm-project",
+            "branch": "main",
+            "description": "Use for Clang diagnostics, AST/tooling, LLVM IR, libc++, compiler flags, and sanitizers"
+        },
+        "chromium": {
+            "repository": "chromium/chromium",
+            "branch": "main",
+            "description": "Use only for Chromium internals, Blink, content layer, build/GN files, and large-scale C++ patterns"
+        }
+    }
+}
