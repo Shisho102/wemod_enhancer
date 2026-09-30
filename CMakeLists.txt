@@ -11,6 +11,9 @@ project(
 # No C++20 modules in use — do not pay for the module dependency scan.
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
+# Self-contained GUI + static deps link and package cleanly anywhere.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Static CRT for all targets. Must precede include(ct_cpm): the CPM-built
 # imgui reads this at creation time and must match the GUI (LNK2038).
 # No-op outside MSVC.

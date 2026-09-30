@@ -38,7 +38,19 @@ if(CMAKE_CROSSCOMPILING)
 endif()
 
 # Desktop deps are unconditional - every configure builds the GUI.
+# clang-tidy co-compilation (ct_clang_tidy) targets project sources only:
+# third-party targets break under it (SDL + PCH) and their findings are
+# not actionable. The wrappers persist in cache across re-configures, so
+# shadow them while the dependencies are created; unsetting afterwards
+# reveals the cache value again for our own targets in src/.
+foreach(ct_tidy_var IN ITEMS CMAKE_C_CLANG_TIDY CMAKE_CXX_CLANG_TIDY)
+    set(${ct_tidy_var} "")
+endforeach()
 find_package(gsl CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
 find_package(sdl3 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+foreach(ct_tidy_var IN ITEMS CMAKE_C_CLANG_TIDY CMAKE_CXX_CLANG_TIDY)
+    unset(${ct_tidy_var})
+endforeach()
+unset(ct_tidy_var)
